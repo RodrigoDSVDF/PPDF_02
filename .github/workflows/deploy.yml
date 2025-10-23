@@ -1,0 +1,68 @@
+
+name: Build and Deploy (Vite/pnpm - FINAL ROBUSTO)
+
+on:
+  push:
+    branches: ["main"]
+
+  # Permite rodar manualmente através da aba Actions
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      # 1. Configura o ambiente Node.js SEM CACHE para evitar o erro do lock file
+      - name: Setup Node.js (Sem Cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          # A linha 'cache: pnpm' foi removida para eliminar o erro 'Dependencies lock file is not found'
+
+      # 2. Instala o pnpm globalmente para garantir que o executável seja encontrado
+      - name: Install pnpm globally
+        run: npm install -g pnpm 
+      
+      # 3. Instala as dependências usando pnpm (do zero)
+      - name: Install dependencies (usando pnpm)
+        # Adicionado --no-frozen-lockfile para forçar o pnpm a usar
+        # o 'package.json' como fonte da verdade, resolvendo o erro OUTDATED_LOCKFILE
+        run: pnpm install --no-frozen-lockfile
+
+      # 4. Executa o build final do Vite
+      - name: Build project (pnpm run build)
+        run: pnpm run build
+        
+      # 5. Configura e sobe a pasta de saída (dist)
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          static_site_artifact_path: './dist' 
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: 'dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
