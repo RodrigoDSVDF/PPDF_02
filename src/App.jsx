@@ -28,7 +28,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-[#e8e8e8]">
+    // Adicione 'overflow-x-hidden' aqui para cortar qualquer conteúdo
+    // que "vaze" para os lados.
+    <div className="min-h-screen bg-[#0f0f0f] text-[#e8e8e8] overflow-x-hidden">
       <Navigation currentPage={currentPage} setCurrentPage={setCurrentPage} />
       {renderPage()}
       
@@ -48,4 +50,3 @@ function App() {
 }
 
 export default App
-
